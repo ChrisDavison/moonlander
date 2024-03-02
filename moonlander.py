@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from pathlib import Path
+import sys
 import zipfile
 import shutil
 import subprocess
@@ -14,7 +15,9 @@ RE_MOD = re.compile(
 )
 RE_TAP = re.compile(r"SS_TAP\(X_(?P<key>[^()]+)\)")
 RE_DELAY = re.compile(r"SS_DELAY\((?P<delay>[0-9]+)\)")
-TARGET_DIR = Path("~/code/external/qmk_firmware/keyboards/moonlander/keymaps/cdavison").expanduser()
+TARGET_DIR = Path(
+    "~/code/external/qmk_firmware/keyboards/moonlander/keymaps/cdavison"
+).expanduser()
 MACRO_DELAY = 10
 
 
@@ -28,7 +31,8 @@ def move_source():
 
     if not source.exists():
         raise FileNotFoundError(source)
-    print("Extracting", source, "to", TARGET_DIR)
+    print("Extracting", source.name)
+    print()
 
     # Extract the zip file
     with zipfile.ZipFile(source, "r") as zip_ref:
@@ -60,40 +64,77 @@ def encode_macro(key, delay=10):
     return f" SS_DELAY({delay}) ".join(parts) + " "
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser("Extract moonlander zip, fix macros, then compile")
     # parser.add_argument("string", type=str)
     parser.add_argument("--macro-delay", type=int, default=10)
+    parser.add_argument("-n", "--skip-macros", action='store_true')
     args = parser.parse_args()
 
-    # move_source()
+    move_source()
 
     keymap_c = TARGET_DIR / "keymap.c"
     content = keymap_c.read_text()
 
-    my_macros = [
-        ("mac1", [r'\(\)', 2]),
-        ("mac2", [r'::<>()', 3]),
-        ("mac3", [r'Vec<>', 1]),
-        ("mac4", [r'HashMap<>', 1]),
-        ("mac5", [r'HashSet<>', 1]),
-    ]
+    my_macros = {
+        "mac1": {"macro": r"\(\)", "left": 2, "re": None},
+        # "mac2": {"macro": r"::<>()", "left": 3, "re": None},
+        # "mac3": {"macro": r"Vec<>", "left": 1, "re": None},
+        # "mac4": {"macro": r"HashMap<>", "left": 1, "re": None},
+        # "mac5": {"macro": r"HashSet<>", "left": 1, "re": None},
+    }
 
-    # replace macros
-    for (to_find, (repl, n_left)) in my_macros:
-        lefts = encode_macro(["left"] * n_left, args.macro_delay)
-        macro_encoded = encode_macro(repl, args.macro_delay) + lefts
+    for k in my_macros:
+        macro_find_str = ".*".join([encode_macro(l).strip() for l in k])
+        macro_fixed = macro_find_str.replace("(", ".").replace(")", ".")
+        my_macros[k]["re"] = re.compile(macro_fixed)
 
-        macro_find_str = ".*".join([encode_macro(l).strip() for l in to_find]) 
-        RE_MACRO = re.compile(macro_find_str.replace('(', r'\(').replace(')', r'\)'))
-        print("FIND", macro_find_str)
-        content = RE_MACRO.sub(macro_encoded, content)
 
-    # shorten the delay
-    # content = RE_DELAY.sub(f"SS_DELAY({args.macro_delay})", content)
+    newlines = []
+    replaced_a_macro = False
+    for line in content.splitlines():
+        if not args.skip_macros:
+            for macro_placeholder, content in my_macros.items():
+                macro_re = content["re"]
+                if macro_re.search(line):
+                    repl = content["macro"]
+                    n_left = content["left"]
+                    print(f"[REPLACED MACRO] {macro_placeholder}  ->  {repl}")
+                    lefts = encode_macro(["left"] * n_left, args.macro_delay)
+                    macro_encoded = encode_macro(repl, args.macro_delay) + lefts
+                    line = macro_re.sub(macro_encoded, line)
+                    replaced_a_macro = True
+        newlines.append(RE_DELAY.sub(f"SS_DELAY({args.macro_delay})", line))
 
-    print(content)
+    if not args.skip_macros and not replaced_a_macro:
+        print("No macros replaced")
+        sys.exit(-1)
+    keymap_c.write_text("\n".join(newlines))
 
-    keymap_c.write_text(content)
+    ret = subprocess.run(
+        ["qmk", "compile", "-kb", "moonlander", "-km", "cdavison"],
+        cwd=Path("~/code/external/qmk_firmware").expanduser(),
+        capture_output=True
+    )
+    if ret.returncode != 0:
+        print()
+        print("=" * 80)
+        print("=" * 80)
+        print()
+        # print(ret.stdout.decode())
+        print(ret.stderr.decode())
+        raise Exception("Compilation failed")
+    else:
+        print("  ____ ___  __  __ ____ ___ _     _____ ____  ")
+        print(" / ___/ _ \\|  \\/  |  _ \\_ _| |   | ____|  _ \\ ")
+        print("| |  | | | | |\\/| | |_) | || |   |  _| | | | |")
+        print("| |__| |_| | |  | |  __/| || |___| |___| |_| |")
+        print(" \\____\\___/|_|  |_|_|  |___|_____|_____|____/ ")
+        print("                                              ")
+        print("Now flash using keymapp")
 
-    # # subprocess.run(["qmk", "compile", "-kb", "moonlander", "-km", "cdavison"])
+    # remove_zip()
+
+
+if __name__ == "__main__":
+    main()
