@@ -78,17 +78,16 @@ def main():
 
     my_macros = {
         "mac1": {"macro": r"\(\)", "left": 2, "re": None},
-        # "mac2": {"macro": r"::<>()", "left": 3, "re": None},
-        # "mac3": {"macro": r"Vec<>", "left": 1, "re": None},
-        # "mac4": {"macro": r"HashMap<>", "left": 1, "re": None},
-        # "mac5": {"macro": r"HashSet<>", "left": 1, "re": None},
+        "mac2": {"macro": r"::<>()", "left": 3, "re": None},
+        "mac3": {"macro": r"Vec<>", "left": 1, "re": None},
+        "mac4": {"macro": r"HashMap<>", "left": 1, "re": None},
+        "mac5": {"macro": r"HashSet<>", "left": 1, "re": None},
     }
 
     for k in my_macros:
         macro_find_str = ".*".join([encode_macro(l).strip() for l in k])
         macro_fixed = macro_find_str.replace("(", ".").replace(")", ".")
         my_macros[k]["re"] = re.compile(macro_fixed)
-
 
     newlines = []
     replaced_a_macro = False
