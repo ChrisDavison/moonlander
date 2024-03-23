@@ -16,7 +16,7 @@ RE_MOD = re.compile(
 RE_TAP = re.compile(r"SS_TAP\(X_(?P<key>[^()]+)\)")
 RE_DELAY = re.compile(r"SS_DELAY\((?P<delay>[0-9]+)\)")
 TARGET_DIR = Path(
-    "~/code/external/qmk_firmware/keyboards/moonlander/keymaps/cdavison"
+    "~/code/qmk_firmware/keyboards/moonlander/keymaps/cdavison"
 ).expanduser()
 MACRO_DELAY = 10
 
@@ -111,7 +111,7 @@ def main():
 
     ret = subprocess.run(
         ["qmk", "compile", "-kb", "moonlander", "-km", "cdavison"],
-        cwd=Path("~/code/external/qmk_firmware").expanduser(),
+        cwd=Path("~/code/qmk_firmware").expanduser(),
         capture_output=True
     )
     if ret.returncode != 0:
