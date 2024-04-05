@@ -4,21 +4,15 @@ import sys
 import zipfile
 import shutil
 import subprocess
-import argparse
 import re
+import click
 
 import keys
+from macros import my_macros
 
 
-RE_MOD = re.compile(
-    r"SS_(?P<mod>LSFT|LCTL|LALT|RSFT|RCTL|RALT|LGUI|RGUI)\((?P<key>.+)\)"
-)
-RE_TAP = re.compile(r"SS_TAP\(X_(?P<key>[^()]+)\)")
 RE_DELAY = re.compile(r"SS_DELAY\((?P<delay>[0-9]+)\)")
-TARGET_DIR = Path(
-    "~/code/qmk_firmware/keyboards/moonlander/keymaps/cdavison"
-).expanduser()
-MACRO_DELAY = 10
+TARGET_DIR = Path("~/code/qmk_firmware/keyboards/moonlander/keymaps/cdavison").expanduser()
 
 
 def move_source():
@@ -64,24 +58,14 @@ def encode_macro(key, delay=10):
     return f" SS_DELAY({delay}) ".join(parts) + " "
 
 
-def main():
-    parser = argparse.ArgumentParser("Extract moonlander zip, fix macros, then compile")
-    # parser.add_argument("string", type=str)
-    parser.add_argument("--macro-delay", type=int, default=10)
-    parser.add_argument("-n", "--skip-macros", action='store_true')
-    args = parser.parse_args()
-
+@click.command(help="Extract moonlander zip, fix macros, then compile")
+@click.option("--macro-delay", type=int, default=10)
+@click.option("-n", "--skip-macros", is_flag=True)
+def main(macro_delay, skip_macros):
     move_source()
 
     keymap_c = TARGET_DIR / "keymap.c"
     content = keymap_c.read_text()
-
-    my_macros = {
-        "mac1": {"macro": r"\(\)", "left": 2, "re": None},
-        "mac2": {"macro": r"::<>()", "left": 3, "re": None},
-        "mac3": {"macro": r"\|", "left": 0, "re": None},
-        "mac4": {"macro": r"Vec<>", "left": 1, "re": None},
-    }
 
     for k in my_macros:
         macro_find_str = ".*".join([encode_macro(l).strip() for l in k])
@@ -91,20 +75,20 @@ def main():
     newlines = []
     replaced_a_macro = False
     for line in content.splitlines():
-        if not args.skip_macros:
+        if not skip_macros:
             for macro_placeholder, content in my_macros.items():
                 macro_re = content["re"]
                 if macro_re.search(line):
                     repl = content["macro"]
                     n_left = content["left"]
                     print(f"[REPLACED MACRO] {macro_placeholder}  ->  {repl}")
-                    lefts = encode_macro(["left"] * n_left, args.macro_delay)
-                    macro_encoded = encode_macro(repl, args.macro_delay) + lefts
+                    lefts = encode_macro(["left"] * n_left, macro_delay)
+                    macro_encoded = encode_macro(repl, macro_delay) + lefts
                     line = macro_re.sub(macro_encoded, line)
                     replaced_a_macro = True
-        newlines.append(RE_DELAY.sub(f"SS_DELAY({args.macro_delay})", line))
+        newlines.append(RE_DELAY.sub(f"SS_DELAY({macro_delay})", line))
 
-    if not args.skip_macros and not replaced_a_macro:
+    if not skip_macros and not replaced_a_macro:
         print("No macros replaced")
         sys.exit(-1)
     keymap_c.write_text("\n".join(newlines))
@@ -112,7 +96,7 @@ def main():
     ret = subprocess.run(
         ["qmk", "compile", "-kb", "moonlander", "-km", "cdavison"],
         cwd=Path("~/code/qmk_firmware").expanduser(),
-        capture_output=True
+        capture_output=True,
     )
     if ret.returncode != 0:
         print()
@@ -130,8 +114,7 @@ def main():
         print(" \\____\\___/|_|  |_|_|  |___|_____|_____|____/ ")
         print("                                              ")
         print("Now flash using keymapp")
-
-    # remove_zip()
+    remove_zip()
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ setup(
     py_modules=["kb"],  # if it's a single-file script
     # packages=find_packages(),  # if it's a complex project
     install_requires=[
-        # "DEPENDENCY"
+        "click >= 8.0.1",
     ],
     entry_points={
         "console_scripts": [
