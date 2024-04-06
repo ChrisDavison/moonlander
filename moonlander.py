@@ -12,7 +12,8 @@ from macros import my_macros
 
 
 RE_DELAY = re.compile(r"SS_DELAY\((?P<delay>[0-9]+)\)")
-TARGET_DIR = Path("~/code/qmk_firmware/keyboards/moonlander/keymaps/cdavison").expanduser()
+QMK_DIR = Path("~/code/EXTERNAL/qmk_firmware").expanduser()
+TARGET_DIR = (QMK_DIR / "keyboards/moonlander/keymaps/cdavison")
 
 
 def move_source():
@@ -90,12 +91,11 @@ def main(macro_delay, skip_macros):
 
     if not skip_macros and not replaced_a_macro:
         print("No macros replaced")
-        sys.exit(-1)
     keymap_c.write_text("\n".join(newlines))
 
     ret = subprocess.run(
         ["qmk", "compile", "-kb", "moonlander", "-km", "cdavison"],
-        cwd=Path("~/code/qmk_firmware").expanduser(),
+        cwd=QMK_DIR,
         capture_output=True,
     )
     if ret.returncode != 0:
@@ -107,6 +107,7 @@ def main(macro_delay, skip_macros):
         print(ret.stderr.decode())
         raise Exception("Compilation failed")
     else:
+        # print(ret.stdout.decode())
         print("  ____ ___  __  __ ____ ___ _     _____ ____  ")
         print(" / ___/ _ \\|  \\/  |  _ \\_ _| |   | ____|  _ \\ ")
         print("| |  | | | | |\\/| | |_) | || |   |  _| | | | |")
@@ -114,7 +115,7 @@ def main(macro_delay, skip_macros):
         print(" \\____\\___/|_|  |_|_|  |___|_____|_____|____/ ")
         print("                                              ")
         print("Now flash using keymapp")
-    remove_zip()
+    # remove_zip()
 
 
 if __name__ == "__main__":
