@@ -39,6 +39,7 @@ def move_source():
         if (TARGET_DIR / f.name).exists():
             (TARGET_DIR / f.name).unlink()
         shutil.move(f, TARGET_DIR)
+    return source
 
 
 def encode_macro(key, delay=10):
@@ -63,7 +64,7 @@ def encode_macro(key, delay=10):
 @click.option("--macro-delay", type=int, default=10)
 @click.option("-n", "--skip-macros", is_flag=True)
 def main(macro_delay, skip_macros):
-    move_source()
+    zipfile = move_source()
 
     keymap_c = TARGET_DIR / "keymap.c"
     content = keymap_c.read_text()
@@ -115,7 +116,7 @@ def main(macro_delay, skip_macros):
         print(" \\____\\___/|_|  |_|_|  |___|_____|_____|____/ ")
         print("                                              ")
         print("Now flash using keymapp")
-    # remove_zip()
+        zipfile.unlink()
 
 
 if __name__ == "__main__":
