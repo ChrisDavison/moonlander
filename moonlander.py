@@ -35,10 +35,12 @@ def move_source():
 
     # Move all files in the source subdir to the target dir
     sourcedir = [p for p in Path("/tmp/kb_temp").glob("*") if p.is_dir()][0]
+    print(sourcedir)
     for f in sourcedir.iterdir():
+        print(f)
         if (TARGET_DIR / f.name).exists():
             (TARGET_DIR / f.name).unlink()
-        shutil.move(f, TARGET_DIR)
+        shutil.move(f, TARGET_DIR / f.name)
     return source
 
 
