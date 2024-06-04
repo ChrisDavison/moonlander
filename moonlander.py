@@ -58,7 +58,7 @@ def encode_macro(key, delay=10):
         elif k in keys.arrows:
             parts.append(keys.arrows[k])
         else:
-            print("Unknown key:", k)
+            print(f"Unknown key: `{k = :}`")
     return f" SS_DELAY({delay}) ".join(parts) + " "
 
 

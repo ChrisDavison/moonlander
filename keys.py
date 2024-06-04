@@ -114,6 +114,7 @@ punctuation = {
     "Backspace": "SS_TAP(X_BACKSPACE)",
     "Tab": "SS_TAP(X_TAB)",
     "Spacebar": "SS_TAP(X_SPACE)",
+    " ": "SS_TAP(X_SPACE)",
     "-": "SS_TAP(X_MINUS)",
     "_": "SS_LSFT(SS_TAP(X_MINUS))",
     "=": "SS_TAP(X_EQUAL)",
