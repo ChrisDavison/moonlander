@@ -13,14 +13,14 @@ from macros import my_macros
 
 RE_DELAY = re.compile(r"SS_DELAY\((?P<delay>[0-9]+)\)")
 QMK_DIR = Path("~/code/EXTERNAL/qmk_firmware").expanduser()
-TARGET_DIR = (QMK_DIR / "keyboards/moonlander/keymaps/cdavison")
+TARGET_DIR = QMK_DIR / "keyboards/moonlander/keymaps/cdavison"
 
 
 def move_source():
     SOURCE_DIR = Path("~/syncthing").expanduser()
 
     # grap the latest zip file
-    files = SOURCE_DIR.glob("moonlander*.zip")
+    files = SOURCE_DIR.glob("*moonlander*.zip")
     files = sorted(files, key=lambda f: f.stat().st_mtime)
     source = files[-1]
 
