@@ -1,0 +1,13 @@
+[project]
+name = "moonlander"
+version = "0.1.0"
+description = "tweak moonlander source and compile"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+	"click>=8.0.1"
+]
+
+[project.scripts]
+moonlander = "moonlander.cli:main"
+kb = "moonlander.cli:main"

@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 from pathlib import Path
-import sys
 import zipfile
 import shutil
 import subprocess
 import re
 import click
 
-import keys
-from macros import my_macros
+import moonlander.keys as keys
+from moonlander.macros import my_macros
 
 
 RE_DELAY = re.compile(r"SS_DELAY\((?P<delay>[0-9]+)\)")
 QMK_DIR = Path("~/code/EXTERNAL/qmk_firmware").expanduser()
-TARGET_DIR = QMK_DIR / "keyboards/moonlander/keymaps/cdavison"
+TARGET_DIR = QMK_DIR / "keyboards/zsa/moonlander/keymaps/cdavison"
 
 
 def move_source():
@@ -35,12 +34,14 @@ def move_source():
 
     # Move all files in the source subdir to the target dir
     sourcedir = [p for p in Path("/tmp/kb_temp").glob("*") if p.is_dir()][0]
-    print(sourcedir)
-    for f in sourcedir.iterdir():
+    print(f"{sourcedir = :}")
+    for f in sourcedir.glob("*"):
         print(f)
-        if (TARGET_DIR / f.name).exists():
-            (TARGET_DIR / f.name).unlink()
-        shutil.move(f, TARGET_DIR / f.name)
+        target_fn = TARGET_DIR / f.name
+        print(f"{target_fn = :}")
+        if target_fn.exists():
+            target_fn.unlink()
+        shutil.move(f, target_fn)
     return source
 
 
