@@ -1,22 +1,28 @@
 #!/usr/bin/env python
-from pathlib import Path
-import zipfile
+import re
 import shutil
 import subprocess
-import re
+import zipfile
+from pathlib import Path
+
 import click
 
 import moonlander.keys as keys
 from moonlander.macros import my_macros
 
-
 RE_DELAY = re.compile(r"SS_DELAY\((?P<delay>[0-9]+)\)")
-QMK_DIR = Path("~/code/EXTERNAL/qmk_firmware").expanduser()
+QMK_DIR = Path("~/qmk_firmware").expanduser()
 TARGET_DIR = QMK_DIR / "keyboards/zsa/moonlander/keymaps/cdavison"
 
 
 def move_source():
-    SOURCE_DIR = Path("~/syncthing").expanduser()
+    SOURCE_DIR = None
+    for d in ["~/syncthing", "~/Syncthing"]:
+        SOURCE_DIR = Path(d).expanduser()
+        if SOURCE_DIR.exists():
+            break
+    if not SOURCE_DIR:
+        raise Exception("couldn't find a source syncthing dir")
 
     # grap the latest zip file
     files = SOURCE_DIR.glob("*moonlander*.zip")
